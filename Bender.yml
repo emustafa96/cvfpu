@@ -48,3 +48,25 @@ sources:
   - src/fpnew_opgroup_multifmt_slice.sv
   - src/fpnew_rounding.sv
   - src/fpnew_top.sv
+  - vendor/cvw/cvw.sv
+  - vendor/cvw/generic/mux.sv
+  - vendor/cvw/generic/csa.sv
+  - vendor/cvw/generic/aplusbeq0.sv
+  - vendor/cvw/generic/flop/flopen.sv
+  - vendor/cvw/generic/flop/flopenr.sv
+  - vendor/cvw/fdivsqrt/fdivsqrt.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtcycles.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtexpcalc.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtfgen2.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtfgen4.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtfsm.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtiter.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtpostproc.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtpreproc.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtstage2.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtstage4.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtuotfc2.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtuotfc4.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtuslc2.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtuslc4.sv
+  - vendor/cvw/fdivsqrt/fdivsqrtuslc4cmp.sv
