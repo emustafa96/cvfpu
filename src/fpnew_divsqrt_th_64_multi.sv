@@ -93,7 +93,7 @@ module fpnew_divsqrt_th_64_multi #(
 
   // Input pipeline signals, index i holds signal after i register stages
   logic                  [0:NUM_INP_REGS][1:0][WIDTH-1:0]       inp_pipe_operands_q;
-  fpnew_pkg::roundmode_e [0:NUM_INP_REGS]                       inp_pipe_rnd_mode_q;
+  fpnew_pkg::roundmode_e [0:NUM_INP_REGS]                       inp_pipe_rnd_mode_q /*verilator split_var */;
   fpnew_pkg::operation_e [0:NUM_INP_REGS]                       inp_pipe_op_q;
   fpnew_pkg::fp_format_e [0:NUM_INP_REGS]                       inp_pipe_dst_fmt_q;
   TagType                [0:NUM_INP_REGS]                       inp_pipe_tag_q;
@@ -140,7 +140,7 @@ module fpnew_divsqrt_th_64_multi #(
   end
   // Output stage: assign selected pipe outputs to signals for later use
   assign operands_q = inp_pipe_operands_q[NUM_INP_REGS];
-  assign rm_q       = inp_pipe_rnd_mode_q[NUM_INP_REGS];
+  assign rnd_mode_d       = inp_pipe_rnd_mode_q[NUM_INP_REGS];
   assign op_q       = inp_pipe_op_q[NUM_INP_REGS];
   assign dst_fmt_q  = inp_pipe_dst_fmt_q[NUM_INP_REGS];
   assign in_valid_q = inp_pipe_valid_q[NUM_INP_REGS];
@@ -318,7 +318,7 @@ module fpnew_divsqrt_th_64_multi #(
   logic [63:0] srcf0, srcf1;
   
   // Save operands in regs, C910 saves all the following information in its regs in the next cycle.
-  // `FFL(rm_q, rnd_mode_d, op_starting, fpnew_pkg::RNE)
+  `FFL(rm_q, rnd_mode_d, op_starting, fpnew_pkg::RNE)
   `FFL(divsqrt_fmt_q, divsqrt_fmt, op_starting, '0)
   `FFL(divsqrt_op_q, op_q, op_starting, fpnew_pkg::DIV)
   `FFL(srcf0_q, operands_q[0], op_starting, '0)
