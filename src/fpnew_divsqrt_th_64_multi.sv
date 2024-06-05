@@ -85,7 +85,7 @@ module fpnew_divsqrt_th_64_multi #(
   // ---------------
   // Selected pipeline output signals as non-arrays
   logic [1:0][WIDTH-1:0] operands_q;
-  fpnew_pkg::roundmode_e rnd_mode_q;
+  fpnew_pkg::roundmode_e rnd_mode_d;
   fpnew_pkg::roundmode_e rm_q;
   fpnew_pkg::operation_e op_q;
   fpnew_pkg::fp_format_e dst_fmt_q;
@@ -318,7 +318,7 @@ module fpnew_divsqrt_th_64_multi #(
   logic [63:0] srcf0, srcf1;
   
   // Save operands in regs, C910 saves all the following information in its regs in the next cycle.
-  // `FFL(rm_q, rnd_mode_q, op_starting, fpnew_pkg::RNE)
+  // `FFL(rm_q, rnd_mode_d, op_starting, fpnew_pkg::RNE)
   `FFL(divsqrt_fmt_q, divsqrt_fmt, op_starting, '0)
   `FFL(divsqrt_op_q, op_q, op_starting, fpnew_pkg::DIV)
   `FFL(srcf0_q, operands_q[0], op_starting, '0)
