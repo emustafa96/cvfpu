@@ -22,7 +22,7 @@ module fpnew_opgroup_multifmt_slice #(
   parameter fpnew_pkg::fmt_logic_t    FpFmtConfig   = '1,
   parameter fpnew_pkg::ifmt_logic_t   IntFmtConfig  = '1,
   parameter logic                     EnableVectors = 1'b1,
-  parameter fpnew_pkg::divsqrt_unit_t DivSqrtSel    = fpnew_pkg::THMULTI,
+  parameter fpnew_pkg::divsqrt_unit_t DivSqrtSel    = fpnew_pkg::CVW,
   parameter int unsigned              NumPipeRegs   = 0,
   parameter fpnew_pkg::pipe_config_t  PipeConfig    = fpnew_pkg::BEFORE,
   parameter logic                     ExtRegEna     = 1'b0,
@@ -178,6 +178,8 @@ FP8. Please use the PULP DivSqrt unit when in need of div/sqrt operations on FP8
     // Lane parameters from Opgroup
     localparam fpnew_pkg::fmt_logic_t LANE_FORMATS = (OpGroup == fpnew_pkg::CONV)
                                                      ? CONV_FORMATS : ACTIVE_FORMATS;
+    localparam fpnew_pkg::fmt_logic_t INT_LANE_FORMATS = (OpGroup == fpnew_pkg::CONV)
+                                                     ? CONV_INT_FORMATS : ACTIVE_INT_FORMATS;                                                     
     localparam int unsigned LANE_WIDTH = (OpGroup == fpnew_pkg::CONV) ? CONV_WIDTH : MAX_WIDTH;
 
     logic [LANE_WIDTH-1:0] local_result; // lane-local results
@@ -300,6 +302,44 @@ FP8. Please use the PULP DivSqrt unit when in need of div/sqrt operations on FP8
             .AuxType     ( logic [AUX_BITS-1:0] )
           ) i_fpnew_divsqrt_th_64_c910 (
            .clk_i,
+            .rst_ni,
+            .operands_i       ( local_operands[1:0] ), // 2 operands
+            .is_boxed_i       ( is_boxed_2op        ), // 2 operands
+            .rnd_mode_i,
+            .op_i,
+            .dst_fmt_i,
+            .tag_i,
+            .mask_i           ( simd_mask_i[lane]   ),
+            .aux_i            ( aux_data            ),
+            .vectorial_op_i   ( vectorial_op        ), // synchronize only vectorial operations
+            .in_valid_i       ( in_valid            ),
+            .in_ready_o       ( lane_in_ready[lane] ),
+            .divsqrt_done_o   ( divsqrt_done[lane]  ),
+            .simd_synch_done_i( simd_synch_done     ),
+            .divsqrt_ready_o  ( divsqrt_ready[lane] ),
+            .simd_synch_rdy_i ( simd_synch_rdy      ),
+            .flush_i,
+            .result_o         ( op_result           ),
+            .status_o         ( op_status           ),
+            .extension_bit_o  ( lane_ext_bit[lane]  ),
+            .tag_o            ( lane_tags[lane]     ),
+            .mask_o           ( lane_masks[lane]    ),
+            .aux_o            ( lane_aux[lane]      ),
+            .out_valid_o      ( out_valid           ),
+            .out_ready_i      ( out_ready           ),
+            .busy_o           ( lane_busy[lane]     ),
+            .reg_ena_i
+          );
+        end else if(DivSqrtSel == fpnew_pkg::CVW) begin : gen_cfw_divsqrt
+          fpnew_divsqrt_cvw_multi#(
+            .FpFmtConfig  ( LANE_FORMATS         ),
+            .IntFmtConfig ( INT_LANE_FORMATS     ),
+            .NumPipeRegs  ( NumPipeRegs          ),
+            .PipeConfig   ( PipeConfig           ),
+            .TagType      ( TagType              ),
+            .AuxType      ( logic [AUX_BITS-1:0] )
+          ) i_fpnew_divsqrt_th_64_c910 (
+            .clk_i,
             .rst_ni,
             .operands_i       ( local_operands[1:0] ), // 2 operands
             .is_boxed_i       ( is_boxed_2op        ), // 2 operands
