@@ -24,15 +24,7 @@ localparam SV39 = 4'd8;
 localparam SV48 = 4'd9;
 
 // macros to define supported modes
-localparam logic I_SUPPORTED = (!E_SUPPORTED);
-localparam logic A_SUPPORTED = (ZAAMO_SUPPORTED & ZALRSC_SUPPORTED);
-localparam logic B_SUPPORTED = ((ZBA_SUPPORTED & ZBB_SUPPORTED & ZBS_SUPPORTED));
-localparam logic C_SUPPORTED = ZCA_SUPPORTED & (D_SUPPORTED ? ZCD_SUPPORTED : 1) & (F_SUPPORTED ? ((XLEN == 32) ? ZCF_SUPPORTED : 1) : 1);
-localparam logic ZKN_SUPPORTED = (ZBKB_SUPPORTED & ZBKC_SUPPORTED & ZBKX_SUPPORTED & ZKND_SUPPORTED & ZKNE_SUPPORTED & ZKNH_SUPPORTED);
-
-// Configure MISA based on supported extensions
-localparam MISA = {6'b0, 5'b0, U_SUPPORTED, 1'b0, S_SUPPORTED, 1'b0, Q_SUPPORTED, 3'b0, M_SUPPORTED, 3'b0, I_SUPPORTED, 2'b0, 
-                   F_SUPPORTED, E_SUPPORTED, D_SUPPORTED, C_SUPPORTED, B_SUPPORTED, A_SUPPORTED};
+localparam logic I_SUPPORTED = 1;
 
 // logarithm of XLEN, used for number of index bits to select
 localparam LOG_XLEN = (XLEN == 32 ? 32'd5 : 32'd6);

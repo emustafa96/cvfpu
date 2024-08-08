@@ -29,43 +29,7 @@
 localparam XLEN = 32'd64;
 
 // IEEE 754 compliance
-localparam IEEE754 = 0;
-
-// RISC-V configuration per specification
-// Base instruction set (defaults to I if E is not supported)
-localparam logic E_SUPPORTED = 0;
-
-// Integer instruction set extensions
-localparam logic ZIFENCEI_SUPPORTED = 1; // Instruction-Fetch fence
-localparam logic ZICSR_SUPPORTED    = 1; // CSR Instructions
-localparam logic ZICCLSM_SUPPORTED  = 1; // Misaligned loads/stores
-localparam logic ZICOND_SUPPORTED   = 1; // Integer conditional operations
-
-// Multiplication & division extensions
-// M implies (and in the configuration file requires) Zmmul
-localparam logic M_SUPPORTED     = 1;
-localparam logic ZMMUL_SUPPORTED = 1;
-
-// Atomic extensions
-// A extension is Zaamo + Zalrsc
-localparam logic ZAAMO_SUPPORTED  = 1;
-localparam logic ZALRSC_SUPPORTED = 1;
-
-// Bit manipulation extensions
-// B extension is Zba + Zbb + Zbs
-localparam logic ZBA_SUPPORTED = 1;
-localparam logic ZBB_SUPPORTED = 1;
-localparam logic ZBS_SUPPORTED = 1;
-localparam logic ZBC_SUPPORTED = 1;
-
-// Scalar crypto extensions
-// Zkn is all 6 of these
-localparam logic ZBKB_SUPPORTED = 1;
-localparam logic ZBKC_SUPPORTED = 1;
-localparam logic ZBKX_SUPPORTED = 1;
-localparam logic ZKND_SUPPORTED = 1;
-localparam logic ZKNE_SUPPORTED = 1;
-localparam logic ZKNH_SUPPORTED = 1;
+localparam IEEE754 = 1;
 
 // Compressed extensions
 // C extension is Zca + Zcf (if RV32 and F supported) + Zcd (if D supported)

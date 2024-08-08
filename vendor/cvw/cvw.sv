@@ -49,14 +49,9 @@ typedef struct packed {
   int           DIVCOPIES;
 
 // macros to define supported modes
-  logic A_SUPPORTED;
-  logic B_SUPPORTED;
-  logic C_SUPPORTED;
   logic D_SUPPORTED;
-  logic E_SUPPORTED;
   logic F_SUPPORTED;
   logic I_SUPPORTED;
-  logic M_SUPPORTED;
   logic Q_SUPPORTED;
   logic S_SUPPORTED;
   logic U_SUPPORTED;

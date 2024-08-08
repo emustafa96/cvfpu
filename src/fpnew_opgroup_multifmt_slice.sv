@@ -330,7 +330,7 @@ FP8. Please use the PULP DivSqrt unit when in need of div/sqrt operations on FP8
             .busy_o           ( lane_busy[lane]     ),
             .reg_ena_i
           );
-        end else if(DivSqrtSel == fpnew_pkg::CVW) begin : gen_cfw_divsqrt
+        end else if(DivSqrtSel == fpnew_pkg::CVW) begin : gen_cvw_divsqrt
           fpnew_divsqrt_cvw_multi#(
             .FpFmtConfig  ( LANE_FORMATS         ),
             .IntFmtConfig ( INT_LANE_FORMATS     ),
@@ -338,7 +338,7 @@ FP8. Please use the PULP DivSqrt unit when in need of div/sqrt operations on FP8
             .PipeConfig   ( PipeConfig           ),
             .TagType      ( TagType              ),
             .AuxType      ( logic [AUX_BITS-1:0] )
-          ) i_fpnew_divsqrt_th_64_c910 (
+          ) i_fpnew_divsqrt_cvw_divsqrt (
             .clk_i,
             .rst_ni,
             .operands_i       ( local_operands[1:0] ), // 2 operands

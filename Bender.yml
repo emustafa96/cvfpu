@@ -15,7 +15,7 @@ export_include_dirs:
 sources:
   - src/fpnew_pkg.sv
   - vendor/cvw/cvw.sv
-  - vendor/cvw/parameter-defs.sv
+  # - vendor/cvw/parameter-defs.sv
   - src/fpnew_cast_multi.sv
   - src/fpnew_classifier.sv
   - vendor/opene906/E906_RTL_FACTORY/gen_rtl/clk/rtl/gated_clk_cell.v

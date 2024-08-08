@@ -5,9 +5,9 @@
 // Description: Wrapper for the division and square root unit of the Wally core
 // Owner: Enis Mustafa <enis.mustafa@axelera.ai>
 
-`include "common_cells/registers.svh"
 `include "config.svh"
-module fpnew_divsqrt_cvw_multi #(
+`include "common_cells/registers.svh"
+module fpnew_divsqrt_cvw_multi #(   
   parameter fpnew_pkg::fmt_logic_t   FpFmtConfig  = '1,
   parameter fpnew_pkg::ifmt_logic_t  IntFmtConfig  = '1,
   // FPU configuration
@@ -55,7 +55,7 @@ module fpnew_divsqrt_cvw_multi #(
   // External register enable override
   input  logic [ExtRegEnaWidth-1:0]   reg_ena_i
 );
-
+  `include "parameter-defs.svh"
   // ----------
   // Constants
   // ----------
@@ -148,34 +148,34 @@ module fpnew_divsqrt_cvw_multi #(
   // -----------------
   // Input processing
   // -----------------
-  logic [3:0] divsqrt_fmt;
+  logic [1:0] divsqrt_fmt;
 
   // Translate fpnew formats into divsqrt formats
   if(WIDTH == 64) begin : translate_fmt_64_bits
     always_comb begin : translate_fmt
       unique case (dst_fmt_q)
-        fpnew_pkg::FP64:    divsqrt_fmt = 4'b1000;
-        fpnew_pkg::FP32:    divsqrt_fmt = 4'b0100;
-        fpnew_pkg::FP16:    divsqrt_fmt = 4'b0010;
-        fpnew_pkg::FP16ALT: divsqrt_fmt = 4'b0001;
-        default:            divsqrt_fmt = 4'b1000; // 64 bit max width
+        fpnew_pkg::FP64:    divsqrt_fmt = 2'b01;
+        fpnew_pkg::FP32:    divsqrt_fmt = 2'b00;
+        fpnew_pkg::FP16:    divsqrt_fmt = 2'b10;
+        fpnew_pkg::FP16ALT: divsqrt_fmt = 2'b10;
+        default:            divsqrt_fmt = 2'b01; // 64 bit max width
       endcase
     end
   end else if(WIDTH == 32) begin : translate_fmt_32_bits
     always_comb begin : translate_fmt
       unique case (dst_fmt_q)
-        fpnew_pkg::FP32:    divsqrt_fmt = 4'b0100;
-        fpnew_pkg::FP16:    divsqrt_fmt = 4'b0010;
-        fpnew_pkg::FP16ALT: divsqrt_fmt = 4'b0001;
-        default:            divsqrt_fmt = 4'b0100; // 32 bit max width
+        fpnew_pkg::FP32:    divsqrt_fmt = 2'b00;
+        fpnew_pkg::FP16:    divsqrt_fmt = 2'b10;
+        fpnew_pkg::FP16ALT: divsqrt_fmt = 2'b10;
+        default:            divsqrt_fmt = 2'b00; // 32 bit max width
       endcase
     end
   end else if(WIDTH == 16) begin : translate_fmt_16_bits
     always_comb begin : translate_fmt
       unique case (dst_fmt_q)
-        fpnew_pkg::FP16:    divsqrt_fmt = 4'b0010;
-        fpnew_pkg::FP16ALT: divsqrt_fmt = 4'b0001;
-        default:            divsqrt_fmt = 4'b0010; // 16 bit max width
+        fpnew_pkg::FP16:    divsqrt_fmt = 2'b10;
+        fpnew_pkg::FP16ALT: divsqrt_fmt = 2'b10;
+        default:            divsqrt_fmt = 2'b10; // 16 bit max width
       endcase
     end
   end else begin
@@ -307,7 +307,7 @@ module fpnew_divsqrt_cvw_multi #(
   
   // Regs to save current instruction
   fpnew_pkg::roundmode_e rm_q;
-  logic[3:0] divsqrt_fmt_q;
+  logic[1:0] divsqrt_fmt_q;
   fpnew_pkg::operation_e divsqrt_op_q;
   logic div_op, sqrt_op;
   logic [WIDTH-1:0] srcf0_q, srcf1_q;
@@ -323,15 +323,15 @@ module fpnew_divsqrt_cvw_multi #(
   // NaN-box inputs with max WIDTH
   if(WIDTH == 64) begin : gen_fmt_64_bits
     always_comb begin : NaN_box_inputs
-      if(divsqrt_fmt_q == 4'b1000) begin // 64-bit
+      if(divsqrt_fmt_q == 2'b01) begin // 64-bit
         srcf0[63:0] = srcf0_q[63:0];
         srcf1[63:0] = srcf1_q[63:0];
-      end else if(divsqrt_fmt_q == 4'b0100) begin // 32-bit
+      end else if(divsqrt_fmt_q == 2'b00) begin // 32-bit
         srcf0[63:32] = '1;
         srcf1[63:32] = '1;
         srcf0[31:0] = srcf0_q[31:0];
         srcf1[31:0] = srcf1_q[31:0];
-      end else if((divsqrt_fmt_q == 4'b0010) || (divsqrt_fmt_q == 4'b0001)) begin //16-bit
+      end else if((divsqrt_fmt_q == 2'b10) || (divsqrt_fmt_q == 4'b0001)) begin //16-bit
         srcf0[63:16] = '1;
         srcf1[63:16] = '1;
         srcf0[15:0] = srcf0_q[15:0];
@@ -343,12 +343,12 @@ module fpnew_divsqrt_cvw_multi #(
     end
   end else if (WIDTH == 32) begin : gen_fmt_32_bits
     always_comb begin : NaN_box_inputs
-      if(divsqrt_fmt_q == 4'b0100) begin // 32-bit
+      if(divsqrt_fmt_q == 2'b00) begin // 32-bit
         srcf0[63:32] = '1;
         srcf1[63:32] = '1;
         srcf0[31:0] = srcf0_q[31:0];
         srcf1[31:0] = srcf1_q[31:0];
-      end else if((divsqrt_fmt_q == 4'b0010) || (divsqrt_fmt_q == 4'b0001)) begin // 16-bit
+      end else if((divsqrt_fmt_q == 2'b10)) begin // 16-bit
         srcf0[63:16] = '1;
         srcf1[63:16] = '1;
         srcf0[15:0] = srcf0_q[15:0];
@@ -360,7 +360,7 @@ module fpnew_divsqrt_cvw_multi #(
     end
   end else if (WIDTH == 16) begin : gen_fmt_16_bits
     always_comb begin : NaN_box_inputs
-      if((divsqrt_fmt_q == 4'b0010) || (divsqrt_fmt_q == 4'b0001)) begin // 16-bit
+      if((divsqrt_fmt_q == 2'b10)) begin // 16-bit
         srcf0[63:16] = '1;
         srcf1[63:16] = '1;
         srcf0[15:0] = srcf0_q[15:0];
@@ -401,19 +401,19 @@ module fpnew_divsqrt_cvw_multi #(
   logic [2:0]                Funct3E;                            // Funct fields of instruction specify type of operations
   logic [2:0]                Funct3M;                            // Funct fields of instruction specify type of operations
   logic [WIDTH-1:0]          XE;                                 // Input 1 to the various units (after forwarding)
-  logic [INT_WIDHT-1:0]      IntSrcXE;                           // Input 1 to the various units (after forwarding)
+  logic [P.XLEN-1:0]      IntSrcXE;                           // Input 1 to the various units (after forwarding)
   logic                      IntDivE, W64E;                      // Integer division on FPU
-  logic [INT_WIDHT-1:0]      ForwardedSrcAE, ForwardedSrcBE;     // Integer input for convert, move, and int div (from IEU)
-  logic [WIDTH-1:0]          PreYE, YE;                          // Input 2 to the various units (after forwarding)
-  logic [WIDTH-1:0]          PreZE, ZE;                          // Input 3 to the various units (after forwarding)
-  logic [FMTBITS-1:0]        FmtE, FmtM;                         // FP precision 0-single 1-double
+  logic [P.XLEN-1:0]      ForwardedSrcAE, ForwardedSrcBE;     // Integer input for convert, move, and int div (from IEU)
+  logic [P.FLEN-1:0]         PreYE, YE;                          // Input 2 to the various units (after forwarding)
+  logic [P.FLEN-1:0]         PreZE, ZE;                          // Input 3 to the various units (after forwarding)
+  logic [P.FMTBITS-1:0]      FmtE, FmtM;                         // FP precision 0-single 1-double
   logic                      XEnE, YEnE, ZEnE;                   // X, Y, Z inputs used for current operation
   logic                      XsE, YsE, ZsE;                      // input's sign - execute stage
   logic                      XsM, YsM;                           // input's sign - memory stage
-  logic [NUM_EXP_BITS-1:0]   XeE, YeE, ZeE;                      // input's exponent - execute stage
-  logic [NUM_EXP_BITS-1:0]   ZeM;                                // input's exponent - memory stage
-  logic [NUM_MAN_BITS:0]     XmE, YmE, ZmE;                      // input's significand - execute stage
-  logic [NUM_MAN_BITS:0]     XmM, YmM, ZmM;                      // input's significand - memory stage
+  logic [P.NE-1:0]   XeE, YeE, ZeE;                      // input's exponent - execute stage
+  logic [P.NE-1:0]   ZeM;                                // input's exponent - memory stage
+  logic [P.NF:0]     XmE, YmE, ZmE;                      // input's significand - execute stage
+  logic [P.NF:0]     XmM, YmM, ZmM;                      // input's significand - memory stage
   logic                      XNaNE, YNaNE, ZNaNE;                // is the input a NaN - execute stage
   logic                      XNaNM, YNaNM, ZNaNM;                // is the input a NaN - memory stage
   logic                      XSNaNE, YSNaNE, ZSNaNE;             // is the input a signaling NaN - execute stage
@@ -424,20 +424,20 @@ module fpnew_divsqrt_cvw_multi #(
   logic                      XInfE, YInfE, ZInfE;                // is the input infinity - execute stage
   logic                      XInfM, YInfM, ZInfM;                // is the input infinity - memory stage
   logic                      XExpMaxE;                           // is the exponent all ones (max value)
-  logic [WIDTH-1:0]          XPostBoxE;                          // X after fixing bad NaN box.  Needed for 1-input operations
-  logic [NUM_EXP_BITS-2:0]   BiasE;                              // Bias of exponent
-  logic [$clog2(WIDTH)-1:0]  NfE;                                // Number of fractional bits
+  logic [P.FLEN-1:0]          XPostBoxE;                          // X after fixing bad NaN box.  Needed for 1-input operations
+  logic [P.NE-2:0]   BiasE;                              // Bias of exponent
+  logic [$clog2(P.FLEN)-1:0]  NfE;                                // Number of fractional bits
   logic                      DivStickyM;                         // fdivsqrt sticky bit
-  logic [NUM_MAN_BITS:0]     UmM;                                // fdivsqrt signifcand
-  logic [NUM_MAN_BITS+1:0]   UeM;                                // fdivsqrt exponent
-  logic [INT_WIDHT-1:0]      FIntDivResultM;                     // fdivsqrt integer division result (for IEU)
+  logic [P.DIVb:0]     UmM;                                // fdivsqrt signifcand
+  logic [P.NE+1:0]   UeM;                                // fdivsqrt exponent
+  logic [P.XLEN-1:0]      FIntDivResultM;                     // fdivsqrt integer division result (for IEU)
   logic                      FDivDoneE, IFDivStartE;             // fdivsqrt control signals
 
 
 
 
   fdivsqrt  
-   #(P)
+   #(.P (P))
    i_cvw_vfdsu_top(
     .clk             ( clk_i  ),
     .reset           ( rst_ni ),
@@ -478,11 +478,11 @@ module fpnew_divsqrt_cvw_multi #(
   );
 
   // unpack unit: splits FP inputs into their parts and classifies SNaN, NaN, Subnorm, Norm, Zero, Infifnity
-  unpack #(P) unpack (
-    .X          ( XE         ), 
-    .Y          ( YE         ), 
-    .Z          ( ZE         ), 
-    .Fmt        ( FmtE       ), 
+  unpack #(.P (P)) unpack (
+    .X          ( srcf0    ), 
+    .Y          ( srcf1    ), 
+    .Z          (            ), 
+    .Fmt        ( divsqrt_fmt_q ), 
     .Xs         ( XsE        ), 
     .Ys         ( YsE        ), 
     .Zs         ( ZsE        ), 
@@ -492,13 +492,13 @@ module fpnew_divsqrt_cvw_multi #(
     .Xm         ( XmE        ), 
     .Ym         ( YmE        ), 
     .Zm         ( ZmE        ), 
-    .YEn        ( YEnE       ), 
-    .FPUActive  ( FPUActiveE ),
+    .YEn        ( op_sel     ), 
+    .FPUActive  ( 1'b1 ),
     .XNaN       ( XNaNE      ), 
     .YNaN       ( YNaNE      ), 
     .ZNaN       ( ZNaNE      ), 
     .XSNaN      ( XSNaNE     ), 
-    .XEn        ( XEnE       ), 
+    .XEn        ( op_sel     ), 
     .YSNaN      ( YSNaNE     ), 
     .ZSNaN      ( ZSNaNE     ), 
     .XSubnorm   ( XSubnormE  ), 
@@ -507,7 +507,7 @@ module fpnew_divsqrt_cvw_multi #(
     .ZZero      ( ZZeroE     ), 
     .XInf       ( XInfE      ), 
     .YInf       ( YInfE      ), 
-    .ZEn        ( ZEnE       ), 
+    .ZEn        (         ), 
     .ZInf       ( ZInfE      ), 
     .XExpMax    ( XExpMaxE   ), 
     .XPostBox   ( XPostBoxE  ), 
