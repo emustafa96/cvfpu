@@ -95,7 +95,7 @@ localparam CACHE_SRAMLEN = 32'd128;
 // Integer Divider Configuration
 // IDIV_BITSPERCYCLE must be 1, 2, or 4
 localparam IDIV_BITSPERCYCLE = 32'd4;
-localparam logic IDIV_ON_FPU = 1;
+localparam logic IDIV_ON_FPU = 0;
 
 
 // FPU division architecture

@@ -320,6 +320,7 @@ module fpnew_divsqrt_cvw_multi #(
   `FFL(srcf0_q, operands_q[0], op_starting, '0)
   `FFL(srcf1_q, operands_q[1], op_starting, '0)
 
+
   // NaN-box inputs with max WIDTH
   if(WIDTH == 64) begin : gen_fmt_64_bits
     always_comb begin : NaN_box_inputs
@@ -385,13 +386,6 @@ module fpnew_divsqrt_cvw_multi #(
   logic op_sel;
   `FFLARNC(op_sel, 1'b1, func_sel, op_sel, 1'b0, clk_i, rst_ni)
 
-  localparam int unsigned NUM_EXP_BITS = fpnew_pkg::super_format(FpFmtConfig).exp_bits;
-  localparam int unsigned NUM_MAN_BITS = fpnew_pkg::super_format(FpFmtConfig).man_bits;
-
-  localparam int unsigned INT_WIDHT = fpnew_pkg::max_int_width(IntFmtConfig);
-
-  localparam FMTBITS = $clog2(fpnew_pkg::NUM_FP_FORMATS);
-
 
   logic                      FPUActiveE;                         // FP instruction being executed
   logic                      FDivStartE, IDivStartE;             // Start division or squareroot
@@ -401,19 +395,19 @@ module fpnew_divsqrt_cvw_multi #(
   logic [2:0]                Funct3E;                            // Funct fields of instruction specify type of operations
   logic [2:0]                Funct3M;                            // Funct fields of instruction specify type of operations
   logic [WIDTH-1:0]          XE;                                 // Input 1 to the various units (after forwarding)
-  logic [P.XLEN-1:0]      IntSrcXE;                           // Input 1 to the various units (after forwarding)
+  logic [P.XLEN-1:0]         IntSrcXE;                           // Input 1 to the various units (after forwarding)
   logic                      IntDivE, W64E;                      // Integer division on FPU
-  logic [P.XLEN-1:0]      ForwardedSrcAE, ForwardedSrcBE;     // Integer input for convert, move, and int div (from IEU)
+  logic [P.XLEN-1:0]         ForwardedSrcAE, ForwardedSrcBE;     // Integer input for convert, move, and int div (from IEU)
   logic [P.FLEN-1:0]         PreYE, YE;                          // Input 2 to the various units (after forwarding)
   logic [P.FLEN-1:0]         PreZE, ZE;                          // Input 3 to the various units (after forwarding)
   logic [P.FMTBITS-1:0]      FmtE, FmtM;                         // FP precision 0-single 1-double
   logic                      XEnE, YEnE, ZEnE;                   // X, Y, Z inputs used for current operation
   logic                      XsE, YsE, ZsE;                      // input's sign - execute stage
   logic                      XsM, YsM;                           // input's sign - memory stage
-  logic [P.NE-1:0]   XeE, YeE, ZeE;                      // input's exponent - execute stage
-  logic [P.NE-1:0]   ZeM;                                // input's exponent - memory stage
-  logic [P.NF:0]     XmE, YmE, ZmE;                      // input's significand - execute stage
-  logic [P.NF:0]     XmM, YmM, ZmM;                      // input's significand - memory stage
+  logic [P.NE-1:0]           XeE, YeE, ZeE;                      // input's exponent - execute stage
+  logic [P.NE-1:0]           ZeM;                                // input's exponent - memory stage
+  logic [P.NF:0]             XmE, YmE, ZmE;                      // input's significand - execute stage
+  logic [P.NF:0]             XmM, YmM, ZmM;                      // input's significand - memory stage
   logic                      XNaNE, YNaNE, ZNaNE;                // is the input a NaN - execute stage
   logic                      XNaNM, YNaNM, ZNaNM;                // is the input a NaN - memory stage
   logic                      XSNaNE, YSNaNE, ZSNaNE;             // is the input a signaling NaN - execute stage
@@ -424,95 +418,93 @@ module fpnew_divsqrt_cvw_multi #(
   logic                      XInfE, YInfE, ZInfE;                // is the input infinity - execute stage
   logic                      XInfM, YInfM, ZInfM;                // is the input infinity - memory stage
   logic                      XExpMaxE;                           // is the exponent all ones (max value)
-  logic [P.FLEN-1:0]          XPostBoxE;                          // X after fixing bad NaN box.  Needed for 1-input operations
-  logic [P.NE-2:0]   BiasE;                              // Bias of exponent
-  logic [$clog2(P.FLEN)-1:0]  NfE;                                // Number of fractional bits
+  logic [P.FLEN-1:0]         XPostBoxE;                          // X after fixing bad NaN box.  Needed for 1-input operations
+  logic [P.NE-2:0]           BiasE;                              // Bias of exponent
+  logic [$clog2(P.FLEN)-1:0] NfE;                                // Number of fractional bits
   logic                      DivStickyM;                         // fdivsqrt sticky bit
-  logic [P.DIVb:0]     UmM;                                // fdivsqrt signifcand
-  logic [P.NE+1:0]   UeM;                                // fdivsqrt exponent
-  logic [P.XLEN-1:0]      FIntDivResultM;                     // fdivsqrt integer division result (for IEU)
+  logic [P.DIVb:0]           UmM;                                // fdivsqrt signifcand
+  logic [P.NE+1:0]           UeM;                                // fdivsqrt exponent
+  logic [P.XLEN-1:0]         FIntDivResultM;                     // fdivsqrt integer division result (for IEU)
   logic                      FDivDoneE, IFDivStartE;             // fdivsqrt control signals
-
-
 
 
   fdivsqrt  
    #(.P (P))
    i_cvw_vfdsu_top(
-    .clk             ( clk_i  ),
-    .reset           ( rst_ni ),
-    .FmtE            ( FmtE   ),
-    .XsE             (XsE),
-    .XmE             (XmE),
-    .YmE             (YmE),
-    .XeE             (XeE),
-    .YeE             (YeE),
-    .XInfE           (XInfE),
-    .YInfE           (YInfE),
-    .XZeroE          (XZeroE),
-    .YZeroE          (YZeroE),
-    .XNaNE           (XNaNE),
-    .YNaNE           (YNaNE),
-    .BiasE           (BiasE),
-    .NfE             (NfE),
-    .FDivStartE      (FDivStartE),
-    .IDivStartE      (IDivStartE),
-    .StallM          (StallM),
-    .FlushE          (FlushE),
-    .SqrtE           (),
-    .SqrtM           (),
-    .ForwardedSrcAE  (ForwardedSrcAE),
-    .ForwardedSrcBE  (ForwardedSrcBE),
-    .Funct3E         (Funct3E),
-    .Funct3M         (Funct3M),
-    .IntDivE         (IntDivE),
-    .W64E            (W64E),
-    .DivStickyM      (DivStickyM),
-    .FDivBusyE       (FDivBusyE),
-    .IFDivStartE     (IFDivStartE),
-    .FDivDoneE       (FDivDoneE),
-    .UeM             (UeM),
-    .UmM             (UmM),
-    .FIntDivResultM  (FIntDivResultM)
+    .clk             ( clk_i                     ),
+    .reset           ( !rst_ni                   ),
+    .FmtE            ( divsqrt_fmt_q             ),
+    .XsE             ( XsE                       ),
+    .XmE             ( XmE                       ),
+    .YmE             ( YmE                       ),
+    .XeE             ( XeE                       ),
+    .YeE             ( YeE                       ),
+    .XInfE           ( XInfE                     ),
+    .YInfE           ( YInfE                     ),
+    .XZeroE          ( XZeroE                    ),
+    .YZeroE          ( YZeroE                    ),
+    .XNaNE           ( XNaNE                     ),
+    .YNaNE           ( YNaNE                     ),
+    .BiasE           ( BiasE                     ),
+    .NfE             ( NfE                       ),
+    .FDivStartE      ( op_starting               ),                 
+    .IDivStartE      ( 'b0                       ),  // only for int
+    .StallM          ( 'b0                       ),                      
+    .FlushE          ( flush_i | last_inp_reg_ena),  
+    .SqrtE           ( sqrt_op                   ),  // Select which operation to do in each component
+    .SqrtM           ( sqrt_op                   ),  // Select which operation to do in each component
+    .ForwardedSrcAE  ( 'b0                       ),  // only for int
+    .ForwardedSrcBE  ( 'b0                       ),  // only for int
+    .Funct3E         ( 'b0                       ),  // only for int
+    .Funct3M         ( 'b0                       ),  // only for int
+    .IntDivE         ( 'b0                       ),  // only for int
+    .W64E            ( 'b0                       ),  // only for int
+    .DivStickyM      ( DivStickyM                ),  // output
+    .FDivBusyE       ( vfdsu_dp_fdiv_busy        ),  // output
+    .IFDivStartE     ( IFDivStartE               ),  // output
+    .FDivDoneE       ( unit_done                 ),  // output
+    .UeM             ( UeM                       ),  // output
+    .UmM             ( UmM                       ),  // output
+    .FIntDivResultM  ( FIntDivResultM            )   // output
 
   );
 
   // unpack unit: splits FP inputs into their parts and classifies SNaN, NaN, Subnorm, Norm, Zero, Infifnity
   unpack #(.P (P)) unpack (
-    .X          ( srcf0    ), 
-    .Y          ( srcf1    ), 
-    .Z          (            ), 
+    .X          ( srcf0         ), 
+    .Y          ( srcf1         ), 
+    .Z          (               ), 
     .Fmt        ( divsqrt_fmt_q ), 
-    .Xs         ( XsE        ), 
-    .Ys         ( YsE        ), 
-    .Zs         ( ZsE        ), 
-    .Xe         ( XeE        ), 
-    .Ye         ( YeE        ), 
-    .Ze         ( ZeE        ), 
-    .Xm         ( XmE        ), 
-    .Ym         ( YmE        ), 
-    .Zm         ( ZmE        ), 
-    .YEn        ( op_sel     ), 
-    .FPUActive  ( 1'b1 ),
-    .XNaN       ( XNaNE      ), 
-    .YNaN       ( YNaNE      ), 
-    .ZNaN       ( ZNaNE      ), 
-    .XSNaN      ( XSNaNE     ), 
-    .XEn        ( op_sel     ), 
-    .YSNaN      ( YSNaNE     ), 
-    .ZSNaN      ( ZSNaNE     ), 
-    .XSubnorm   ( XSubnormE  ), 
-    .XZero      ( XZeroE     ), 
-    .YZero      ( YZeroE     ), 
-    .ZZero      ( ZZeroE     ), 
-    .XInf       ( XInfE      ), 
-    .YInf       ( YInfE      ), 
-    .ZEn        (         ), 
-    .ZInf       ( ZInfE      ), 
-    .XExpMax    ( XExpMaxE   ), 
-    .XPostBox   ( XPostBoxE  ), 
-    .Bias       ( BiasE      ), 
-    .Nf         ( NfE        )
+    .Xs         ( XsE           ), 
+    .Ys         ( YsE           ), 
+    .Zs         ( ZsE           ), 
+    .Xe         ( XeE           ), 
+    .Ye         ( YeE           ), 
+    .Ze         ( ZeE           ), 
+    .Xm         ( XmE           ), 
+    .Ym         ( YmE           ), 
+    .Zm         ( ZmE           ), 
+    .YEn        ( op_sel        ), 
+    .FPUActive  ( 1'b1          ),
+    .XNaN       ( XNaNE         ), 
+    .YNaN       ( YNaNE         ), 
+    .ZNaN       ( ZNaNE         ), 
+    .XSNaN      ( XSNaNE        ), 
+    .XEn        ( op_sel        ), 
+    .YSNaN      ( YSNaNE        ), 
+    .ZSNaN      ( ZSNaNE        ), 
+    .XSubnorm   ( XSubnormE     ), 
+    .XZero      ( XZeroE        ), 
+    .YZero      ( YZeroE        ), 
+    .ZZero      ( ZZeroE        ), 
+    .XInf       ( XInfE         ), 
+    .YInf       ( YInfE         ), 
+    .ZEn        ( 1'b0          ), 
+    .ZInf       ( ZInfE         ), 
+    .XExpMax    ( XExpMaxE      ), 
+    .XPostBox   ( XPostBoxE     ), 
+    .Bias       ( BiasE         ), 
+    .Nf         ( NfE           )
   );
 
 
