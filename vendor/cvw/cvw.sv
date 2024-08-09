@@ -47,6 +47,9 @@ typedef struct packed {
 // FPU division architecture
   int           RADIX;
   int           DIVCOPIES;
+  
+  logic         ZFH_SUPPORTED;
+  logic         ZFA_SUPPORTED;
 
 // macros to define supported modes
   logic D_SUPPORTED;

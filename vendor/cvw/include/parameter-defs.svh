@@ -7,6 +7,8 @@ localparam cvw::cvw_t P = '{
   IDIV_ON_FPU               :        IDIV_ON_FPU,
   RADIX                     :        RADIX,
   DIVCOPIES                 :        DIVCOPIES,
+  ZFH_SUPPORTED :        ZFH_SUPPORTED,
+  ZFA_SUPPORTED :        ZFA_SUPPORTED,
   D_SUPPORTED               : D_SUPPORTED,
   F_SUPPORTED               : F_SUPPORTED,
   I_SUPPORTED               : I_SUPPORTED,

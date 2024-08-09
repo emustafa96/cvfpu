@@ -108,20 +108,8 @@ module fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
   //////////////////////////////////////////////////////
 
   // count leading zeros for Subnorm FP and to normalize integer inputs
-  lzc #(
-    .WIDTH   (P.DIVb+1)
-  ) lzcX (
-    .in_i    (IFX),
-    .cnt_o   (ell),
-    .empty_o ()
-    );
-    lzc #(
-    .WIDTH   (P.DIVb+1)
-  ) lzcY (
-    .in_i    (IFD),
-    .cnt_o   (mE),
-    .empty_o ()
-    );
+  lzc_cvw #(P.DIVb+1) lzcX (IFX, ell);
+  lzc_cvw #(P.DIVb+1) lzcY (IFD, mE);
 
   // Normalization shift: shift leading one into most significant bit
   assign Xnorm = (IFX << ell);

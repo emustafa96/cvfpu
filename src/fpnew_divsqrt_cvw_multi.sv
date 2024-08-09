@@ -312,13 +312,16 @@ module fpnew_divsqrt_cvw_multi #(
   logic div_op, sqrt_op;
   logic [WIDTH-1:0] srcf0_q, srcf1_q;
   logic [63:0] srcf0, srcf1;
-  
+  logic start_div_q;
+
+
   // Save operands in regs, C910 saves all the following information in its regs in the next cycle.
   `FFL(rm_q, rnd_mode_q, op_starting, fpnew_pkg::RNE)
   `FFL(divsqrt_fmt_q, divsqrt_fmt, op_starting, '0)
   `FFL(divsqrt_op_q, op_q, op_starting, fpnew_pkg::DIV)
   `FFL(srcf0_q, operands_q[0], op_starting, '0)
   `FFL(srcf1_q, operands_q[1], op_starting, '0)
+  `FF(start_div_q, op_starting, '0)
 
 
   // NaN-box inputs with max WIDTH
@@ -427,50 +430,10 @@ module fpnew_divsqrt_cvw_multi #(
   logic [P.XLEN-1:0]         FIntDivResultM;                     // fdivsqrt integer division result (for IEU)
   logic                      FDivDoneE, IFDivStartE;             // fdivsqrt control signals
 
-
-  fdivsqrt  
-   #(.P (P))
-   i_cvw_vfdsu_top(
-    .clk             ( clk_i                     ),
-    .reset           ( !rst_ni                   ),
-    .FmtE            ( divsqrt_fmt_q             ),
-    .XsE             ( XsE                       ),
-    .XmE             ( XmE                       ),
-    .YmE             ( YmE                       ),
-    .XeE             ( XeE                       ),
-    .YeE             ( YeE                       ),
-    .XInfE           ( XInfE                     ),
-    .YInfE           ( YInfE                     ),
-    .XZeroE          ( XZeroE                    ),
-    .YZeroE          ( YZeroE                    ),
-    .XNaNE           ( XNaNE                     ),
-    .YNaNE           ( YNaNE                     ),
-    .BiasE           ( BiasE                     ),
-    .NfE             ( NfE                       ),
-    .FDivStartE      ( op_starting               ),                 
-    .IDivStartE      ( 'b0                       ),  // only for int
-    .StallM          ( 'b0                       ),                      
-    .FlushE          ( flush_i | last_inp_reg_ena),  
-    .SqrtE           ( sqrt_op                   ),  // Select which operation to do in each component
-    .SqrtM           ( sqrt_op                   ),  // Select which operation to do in each component
-    .ForwardedSrcAE  ( 'b0                       ),  // only for int
-    .ForwardedSrcBE  ( 'b0                       ),  // only for int
-    .Funct3E         ( 'b0                       ),  // only for int
-    .Funct3M         ( 'b0                       ),  // only for int
-    .IntDivE         ( 'b0                       ),  // only for int
-    .W64E            ( 'b0                       ),  // only for int
-    .DivStickyM      ( DivStickyM                ),  // output
-    .FDivBusyE       ( vfdsu_dp_fdiv_busy        ),  // output
-    .IFDivStartE     ( IFDivStartE               ),  // output
-    .FDivDoneE       ( unit_done                 ),  // output
-    .UeM             ( UeM                       ),  // output
-    .UmM             ( UmM                       ),  // output
-    .FIntDivResultM  ( FIntDivResultM            )   // output
-
-  );
-
   // unpack unit: splits FP inputs into their parts and classifies SNaN, NaN, Subnorm, Norm, Zero, Infifnity
-  unpack #(.P (P)) unpack (
+  unpack #(
+    .P (P)
+  ) i_cvw_unpack (
     .X          ( srcf0         ), 
     .Y          ( srcf1         ), 
     .Z          (               ), 
@@ -508,38 +471,103 @@ module fpnew_divsqrt_cvw_multi #(
   );
 
 
+  fdivsqrt  
+   #(
+    .P (P)
+   ) i_cvw_vfdsu_top(
+    .clk             ( clk_i                     ),
+    .reset           ( !rst_ni                   ),
+    .FmtE            ( divsqrt_fmt_q             ),
+    .XsE             ( XsE                       ),
+    .XmE             ( XmE                       ),
+    .YmE             ( YmE                       ),
+    .XeE             ( XeE                       ),
+    .YeE             ( YeE                       ),
+    .XInfE           ( XInfE                     ),
+    .YInfE           ( YInfE                     ),
+    .XZeroE          ( XZeroE                    ),
+    .YZeroE          ( YZeroE                    ),
+    .XNaNE           ( XNaNE                     ),
+    .YNaNE           ( YNaNE                     ),
+    .BiasE           ( BiasE                     ),
+    .NfE             ( NfE                       ),
+    .FDivStartE      ( start_div_q               ),                 
+    .IDivStartE      ( 'b0                       ),  // only for int
+    .StallM          ( 'b0                       ),                      
+    .FlushE          ( flush_i | last_inp_reg_ena),  
+    .SqrtE           ( sqrt_op                   ),  // Select which operation to do in each component
+    .SqrtM           ( sqrt_op                   ),  // Select which operation to do in each component
+    .ForwardedSrcAE  ( 'b0                       ),  // only for int
+    .ForwardedSrcBE  ( 'b0                       ),  // only for int
+    .Funct3E         ( 'b0                       ),  // only for int
+    .Funct3M         ( 'b0                       ),  // only for int
+    .IntDivE         ( 'b0                       ),  // only for int
+    .W64E            ( 'b0                       ),  // only for int
+    .DivStickyM      ( DivStickyM                ),  // output
+    .FDivBusyE       ( vfdsu_dp_fdiv_busy        ),  // output
+    .IFDivStartE     ( IFDivStartE               ),  // output
+    .FDivDoneE       ( unit_done                 ),  // output
+    .UeM             ( UeM                       ),  // output
+    .UmM             ( UmM                       ),  // output
+    .FIntDivResultM  ( FIntDivResultM            )   // output
 
-  // ct_vfdsu_top i_ct_vfdsu_top (
-  //   .cp0_vfpu_icg_en                ( 1'b0                      ), // Internal clock gating, (module enable) doesn't matter when the clk_gate module is redundant anyway
-  //   .cp0_yy_clk_en                  ( 1'b1                      ), // Global clock enable (same as above)
-  //   .cpurst_b                       ( rst_ni                    ), // Reset
-  //   .dp_vfdsu_ex1_pipex_dst_ereg    ( '0                        ), // Don't care, used in C910
-  //   .dp_vfdsu_ex1_pipex_dst_vreg    ( '0                        ), // Don't care, used in C910
-  //   .dp_vfdsu_ex1_pipex_iid         ( '0                        ), // Don't care, used in C910
-  //   .dp_vfdsu_ex1_pipex_imm0        ( 3'b111                    ), // Round mode, set to 3'b111 to select vfpu_yy_xx_rm signal
-  //   .dp_vfdsu_ex1_pipex_sel         ( op_sel                    ), // 3. Select operands, start operation
-  //   .dp_vfdsu_ex1_pipex_srcf0       ( srcf0                     ), // Input for operand 0
-  //   .dp_vfdsu_ex1_pipex_srcf1       ( srcf1                     ), // Input for operand 1
-  //   .dp_vfdsu_fdiv_gateclk_issue    ( 1'b1                      ), // Local clock enable (same as above)
-  //   .dp_vfdsu_idu_fdiv_issue        ( op_starting               ), // 1. Issue fdiv (FSM in ctrl)
-  //   .forever_cpuclk                 ( clk_i                     ), // Clock input
-  //   .idu_vfpu_rf_pipex_func         ( {3'b0, divsqrt_fmt_q, 11'b0 ,sqrt_op, div_op} ), // Defines format (bits 16,15) and operation (bits 1,0)
-  //   .idu_vfpu_rf_pipex_gateclk_sel  ( func_sel                  ), // 2. Select func
-  //   .pad_yy_icg_scan_en             ( 1'b0                      ), // SE signal for the redundant clock gating module
-  //   .rtu_yy_xx_flush                ( flush_i | last_inp_reg_ena), // Flush
-  //   .vfpu_yy_xx_dqnan               ( 1'b0                      ), // Disable qNaN, set to 1 if sNaN is used
-  //   .vfpu_yy_xx_rm                  ( rm_q                      ), // Round mode. redundant if imm0 set to the same
-  //   .pipex_dp_vfdsu_ereg            (                           ), // Don't care, used by C910
-  //   .pipex_dp_vfdsu_ereg_data       ( unit_status               ), // Output: status flags
-  //   .pipex_dp_vfdsu_freg_data       ( unit_result               ), // Output: result
-  //   .pipex_dp_vfdsu_inst_vld        ( unit_done                 ), // The result is valid
-  //   .pipex_dp_vfdsu_vreg            (                           ), // Don't care, used by C910
-  //   .vfdsu_dp_fdiv_busy             ( vfdsu_dp_fdiv_busy        ), // Unit is busy, data in flight
-  //   .vfdsu_dp_inst_wb_req           (                           ), // Don't care, used by C910
-  //   .vfdsu_ifu_debug_ex2_wait       (                           ), // Debug output
-  //   .vfdsu_ifu_debug_idle           (                           ), // Debug output
-  //   .vfdsu_ifu_debug_pipe_busy      (                           )  // Debug output
-  // );
+  );
+
+  // flopenrc #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, FlushM, 'b1, XmE, XmM);
+  flopenrc #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, FlushM, 'b1, YmE, YmM);
+
+  flopenr #(13) EMFpReg5 (clk_i, !rst_ni, 'b1, 
+  {XsE, YsE, XZeroE, YZeroE, XInfE, YInfE, ZInfE, XNaNE, YNaNE, ZNaNE, XSNaNE, YSNaNE, ZSNaNE},
+  {XsM, YsM, XZeroM, YZeroM, XInfM, YInfM, ZInfM, XNaNM, YNaNM, ZNaNM, XSNaNM, YSNaNM, ZSNaNM});  
+
+
+
+  postprocess #(
+    .P (P)
+  ) i_cvw_postprocess_i(
+    .Xs              ( XsM                    ),
+    .Ys              ( YsM                    ),
+    .Xm              ( XmM                    ),
+    .Ym              ( YmM                    ),
+    .Zm              (                        ),
+    .Frm             ( rm_q                   ),
+    .Fmt             ( divsqrt_fmt_q          ),
+    .OpCtrl          ( {2'b0, sqrt_op}        ),
+    .XZero           ( XZeroM                 ),
+    .YZero           ( YZeroM                 ),
+    .XInf            ( XInfM                  ),
+    .YInf            ( YInfM                  ),
+    .ZInf            (                        ),
+    .XNaN            ( XNaNM                  ),
+    .YNaN            ( YNaNM                  ),
+    .ZNaN            ( ZNaNM                  ),
+    .XSNaN           ( XSNaNM                 ),
+    .YSNaN           ( YSNaNM                 ),
+    .ZSNaN           (                        ),
+    .PostProcSel     ( 2'b01                  ),
+    .FmaAs           (                        ),
+    .FmaPs           (                        ),
+    .FmaSs           (                        ),
+    .FmaSe           (                        ),
+    .FmaSm           (                        ),
+    .FmaASticky      (                        ),
+    .FmaSCnt         (                        ),
+    .DivSticky       ( DivStickyM             ),
+    .DivUe           ( UeM                    ),
+    .DivUm           ( UmM                    ),
+    .CvtCs           (                        ),
+    .CvtCe           (                        ),
+    .CvtResSubnormUf (                        ),
+    .CvtShiftAmt     (                        ),
+    .ToInt           (                        ),
+    .Zfa             (                        ),
+    .CvtLzcIn        (                        ),
+    .IntZero         (                        ),
+    .PostProcRes     ( PostProcResM           ),
+    .PostProcFlg     ( PostProcFlgM           ),
+    .FCvtIntRes      (                        )
+  );
+
 
   assign unit_ready = !vfdsu_dp_fdiv_busy;
 
