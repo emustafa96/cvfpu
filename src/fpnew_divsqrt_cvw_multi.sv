@@ -436,7 +436,7 @@ module fpnew_divsqrt_cvw_multi #(
   ) i_cvw_unpack (
     .X          ( srcf0         ), 
     .Y          ( srcf1         ), 
-    .Z          (               ), 
+    .Z          ( '0           ), 
     .Fmt        ( divsqrt_fmt_q ), 
     .Xs         ( XsE           ), 
     .Ys         ( YsE           ), 
@@ -475,52 +475,50 @@ module fpnew_divsqrt_cvw_multi #(
    #(
     .P (P)
    ) i_cvw_vfdsu_top(
-    .clk             ( clk_i                     ),
-    .reset           ( !rst_ni                   ),
-    .FmtE            ( divsqrt_fmt_q             ),
-    .XsE             ( XsE                       ),
-    .XmE             ( XmE                       ),
-    .YmE             ( YmE                       ),
-    .XeE             ( XeE                       ),
-    .YeE             ( YeE                       ),
-    .XInfE           ( XInfE                     ),
-    .YInfE           ( YInfE                     ),
-    .XZeroE          ( XZeroE                    ),
-    .YZeroE          ( YZeroE                    ),
-    .XNaNE           ( XNaNE                     ),
-    .YNaNE           ( YNaNE                     ),
-    .BiasE           ( BiasE                     ),
-    .NfE             ( NfE                       ),
-    .FDivStartE      ( start_div_q               ),                 
-    .IDivStartE      ( 'b0                       ),  // only for int
-    .StallM          ( 'b0                       ),                      
-    .FlushE          ( flush_i | last_inp_reg_ena),  
-    .SqrtE           ( sqrt_op                   ),  // Select which operation to do in each component
-    .SqrtM           ( sqrt_op                   ),  // Select which operation to do in each component
-    .ForwardedSrcAE  ( 'b0                       ),  // only for int
-    .ForwardedSrcBE  ( 'b0                       ),  // only for int
-    .Funct3E         ( 'b0                       ),  // only for int
-    .Funct3M         ( 'b0                       ),  // only for int
-    .IntDivE         ( 'b0                       ),  // only for int
-    .W64E            ( 'b0                       ),  // only for int
-    .DivStickyM      ( DivStickyM                ),  // output
-    .FDivBusyE       ( vfdsu_dp_fdiv_busy        ),  // output
-    .IFDivStartE     ( IFDivStartE               ),  // output
-    .FDivDoneE       ( unit_done                 ),  // output
-    .UeM             ( UeM                       ),  // output
-    .UmM             ( UmM                       ),  // output
-    .FIntDivResultM  ( FIntDivResultM            )   // output
-
+    .clk             ( clk_i                      ),
+    .reset           ( !rst_ni                    ),
+    .FmtE            ( divsqrt_fmt_q              ),
+    .XsE             ( XsE                        ),
+    .XmE             ( XmE                        ),
+    .YmE             ( YmE                        ),
+    .XeE             ( XeE                        ),
+    .YeE             ( YeE                        ),
+    .XInfE           ( XInfE                      ),
+    .YInfE           ( YInfE                      ),
+    .XZeroE          ( XZeroE                     ),
+    .YZeroE          ( YZeroE                     ),
+    .XNaNE           ( XNaNE                      ),
+    .YNaNE           ( YNaNE                      ),
+    .BiasE           ( BiasE                      ),
+    .NfE             ( NfE                        ),
+    .FDivStartE      ( start_div_q                ),                 
+    .IDivStartE      ( '0                         ),  // only for int
+    .StallM          ( '0                         ),                      
+    .FlushE          ( flush_i | last_inp_reg_ena ),  
+    .SqrtE           ( sqrt_op                    ),  // Select which operation to do in each component
+    .SqrtM           ( sqrt_op                    ),  // Select which operation to do in each component
+    .ForwardedSrcAE  ( '0                         ),  // only for int
+    .ForwardedSrcBE  ( '0                         ),  // only for int
+    .Funct3E         ( '0                         ),  // only for int
+    .Funct3M         ( '0                         ),  // only for int
+    .IntDivE         ( '0                         ),  // only for int
+    .W64E            ( '0                         ),  // only for int
+    .DivStickyM      ( DivStickyM                 ),  // output
+    .FDivBusyE       ( vfdsu_dp_fdiv_busy         ),  // output
+    .IFDivStartE     ( IFDivStartE                ),  // output
+    .FDivDoneE       ( unit_done                  ),  // output
+    .UeM             ( UeM                        ),  // output
+    .UmM             ( UmM                        ),  // output
+    .FIntDivResultM  ( FIntDivResultM             )   // output
+ 
   );
 
-  // flopenrc #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, FlushM, 'b1, XmE, XmM);
-  flopenrc #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, FlushM, 'b1, YmE, YmM);
+  flopenrc #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, FlushM, 1'b1, XmE, XmM);
+  flopenrc #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, FlushM, 1'b1, YmE, YmM);
 
-  flopenr #(13) EMFpReg5 (clk_i, !rst_ni, 'b1, 
+  flopenr #(13) EMFpReg5 (clk_i, !rst_ni, 1'b1, 
   {XsE, YsE, XZeroE, YZeroE, XInfE, YInfE, ZInfE, XNaNE, YNaNE, ZNaNE, XSNaNE, YSNaNE, ZSNaNE},
   {XsM, YsM, XZeroM, YZeroM, XInfM, YInfM, ZInfM, XNaNM, YNaNM, ZNaNM, XSNaNM, YSNaNM, ZSNaNM});  
-
-
 
   postprocess #(
     .P (P)
@@ -529,7 +527,7 @@ module fpnew_divsqrt_cvw_multi #(
     .Ys              ( YsM                    ),
     .Xm              ( XmM                    ),
     .Ym              ( YmM                    ),
-    .Zm              (                        ),
+    .Zm              ( '0                     ),
     .Frm             ( rm_q                   ),
     .Fmt             ( divsqrt_fmt_q          ),
     .OpCtrl          ( {2'b0, sqrt_op}        ),
@@ -537,35 +535,35 @@ module fpnew_divsqrt_cvw_multi #(
     .YZero           ( YZeroM                 ),
     .XInf            ( XInfM                  ),
     .YInf            ( YInfM                  ),
-    .ZInf            (                        ),
+    .ZInf            ( '0                     ),
     .XNaN            ( XNaNM                  ),
     .YNaN            ( YNaNM                  ),
     .ZNaN            ( ZNaNM                  ),
     .XSNaN           ( XSNaNM                 ),
     .YSNaN           ( YSNaNM                 ),
-    .ZSNaN           (                        ),
+    .ZSNaN           ( '0                     ),
     .PostProcSel     ( 2'b01                  ),
-    .FmaAs           (                        ),
-    .FmaPs           (                        ),
-    .FmaSs           (                        ),
-    .FmaSe           (                        ),
-    .FmaSm           (                        ),
-    .FmaASticky      (                        ),
-    .FmaSCnt         (                        ),
+    .FmaAs           ( '0                     ),
+    .FmaPs           ( '0                     ),
+    .FmaSs           ( '0                     ),
+    .FmaSe           ( '0                     ),
+    .FmaSm           ( '0                     ),
+    .FmaASticky      ( '0                     ),
+    .FmaSCnt         ( '0                     ),
     .DivSticky       ( DivStickyM             ),
     .DivUe           ( UeM                    ),
     .DivUm           ( UmM                    ),
-    .CvtCs           (                        ),
-    .CvtCe           (                        ),
-    .CvtResSubnormUf (                        ),
-    .CvtShiftAmt     (                        ),
-    .ToInt           (                        ),
-    .Zfa             (                        ),
-    .CvtLzcIn        (                        ),
-    .IntZero         (                        ),
-    .PostProcRes     ( PostProcResM           ),
-    .PostProcFlg     ( PostProcFlgM           ),
-    .FCvtIntRes      (                        )
+    .CvtCs           ( '0                     ),
+    .CvtCe           ( '0                     ),
+    .CvtResSubnormUf ( '0                     ),
+    .CvtShiftAmt     ( '0                     ),
+    .ToInt           ( '0                     ),
+    .Zfa             ( '0                     ),
+    .CvtLzcIn        ( '0                     ),
+    .IntZero         ( '0                     ),
+    .PostProcRes     ( unit_result            ),
+    .PostProcFlg     ( unit_status            ),
+    .FCvtIntRes      ( /* UNUSED  */          )
   );
 
 
