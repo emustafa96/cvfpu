@@ -56,7 +56,6 @@ sources:
   - src/fpnew_top.sv
   - vendor/cvw/generic/mux.sv
   - vendor/cvw/generic/csa.sv
-  - vendor/cvw/generic/lzc.sv
   - vendor/cvw/generic/aplusbeq0.sv
   - vendor/cvw/generic/flop/flopen.sv
   - vendor/cvw/generic/flop/flopenr.sv
