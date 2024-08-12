@@ -503,8 +503,8 @@ module fpnew_divsqrt_cvw_multi #(
  
   );
 
-  flopenr #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, 1'b1, XmE, XmM);
-  flopenr #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, 1'b1, YmE, YmM);
+  flopenr #(53) EMFpReg2 (clk_i, !rst_ni, 1'b1, XmE, XmM);
+  flopenr #(53) EMFpReg3 (clk_i, !rst_ni, 1'b1, YmE, YmM);
 
   flopenr #(13) EMFpReg5 (clk_i, !rst_ni, 1'b1, 
   {XsE, YsE, XZeroE, YZeroE, XInfE, YInfE, ZInfE, XNaNE, YNaNE, ZNaNE, XSNaNE, YSNaNE, ZSNaNE},
