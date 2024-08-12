@@ -390,17 +390,7 @@ module fpnew_divsqrt_cvw_multi #(
   `FFLARNC(op_sel, 1'b1, func_sel, op_sel, 1'b0, clk_i, rst_ni)
 
 
-  logic                      FPUActiveE;                         // FP instruction being executed
   logic                      FDivStartE, IDivStartE;             // Start division or squareroot
-  logic                      StallE, StallM, StallW;             // stall signals (from HZU)
-  logic                      FlushE, FlushM, FlushW;             // flush signals (from HZU)
-  logic                      FDivBusyE;                          // Is the divide/sqrt unit busy (stall execute stage) (to HZU)
-  logic [2:0]                Funct3E;                            // Funct fields of instruction specify type of operations
-  logic [2:0]                Funct3M;                            // Funct fields of instruction specify type of operations
-  logic [WIDTH-1:0]          XE;                                 // Input 1 to the various units (after forwarding)
-  logic [P.XLEN-1:0]         IntSrcXE;                           // Input 1 to the various units (after forwarding)
-  logic                      IntDivE, W64E;                      // Integer division on FPU
-  logic [P.XLEN-1:0]         ForwardedSrcAE, ForwardedSrcBE;     // Integer input for convert, move, and int div (from IEU)
   logic [P.FLEN-1:0]         PreYE, YE;                          // Input 2 to the various units (after forwarding)
   logic [P.FLEN-1:0]         PreZE, ZE;                          // Input 3 to the various units (after forwarding)
   logic [P.FMTBITS-1:0]      FmtE, FmtM;                         // FP precision 0-single 1-double
@@ -513,8 +503,8 @@ module fpnew_divsqrt_cvw_multi #(
  
   );
 
-  flopenrc #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, FlushM, 1'b1, XmE, XmM);
-  flopenrc #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, FlushM, 1'b1, YmE, YmM);
+  flopenr #(P.NF+1) EMFpReg2 (clk_i, !rst_ni, 1'b1, XmE, XmM);
+  flopenr #(P.NF+1) EMFpReg3 (clk_i, !rst_ni, 1'b1, YmE, YmM);
 
   flopenr #(13) EMFpReg5 (clk_i, !rst_ni, 1'b1, 
   {XsE, YsE, XZeroE, YZeroE, XInfE, YInfE, ZInfE, XNaNE, YNaNE, ZNaNE, XSNaNE, YSNaNE, ZSNaNE},
